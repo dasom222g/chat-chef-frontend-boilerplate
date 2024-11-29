@@ -1,22 +1,84 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import PrevButton from "../components/PrevButton";
 import InfoInput from "../components/InfoInput";
 import AddButton from "../components/AddButton";
 import Button from "../components/Button";
+import Title from "../components/Title";
+import { useNavigate } from "react-router-dom";
 
-const Info = () => {
+const Info = ({ sendIngredientList }) => {
   // logic
+  const history = useNavigate();
 
-  // TODO: set함수 추가하기
-  const [ingredientList] = useState([]); // 사용자가 입력할 재료 목록
+  const [ingredientList, setIngredientList] = useState([]); // 사용자가 입력할 재료 목록
 
   const addIngredient = () => {
     console.log("재료 추가하기");
+    const id = Date.now();
+    const newItem = {
+      id,
+      label: `ingredient${id}`,
+      text: "재료명",
+      value: "",
+    };
+
+    setIngredientList([...ingredientList, newItem]);
   };
 
   const handleNext = () => {
-    console.log("chat페이지로 이동");
+    // 입력값이 있는 배열
+    const filterDataList = ingredientList.filter(
+      (item) => item.value.trim() !== ""
+    );
+    console.log("🚀filterDataList:", filterDataList);
+    if (filterDataList.length) {
+      // 재료 입력값이 있는 경우
+
+      // 데이터 부모에게 전송
+      sendIngredientList(
+        ingredientList.map((item) => ({ ...item, value: item.value.trim() }))
+      );
+      // console.log(
+      //   "trim결과==> ",
+      //   ingredientList.map((item) => item.value.trim())
+      // );
+      history("/chat");
+      return;
+    }
+
+    // 재료 입력값이 없는 경우
+    alert("재료를 최소 1개이상 입력해주세요");
   };
+
+  const handleRemove = (id) => {
+    setIngredientList((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleChange = (selectedItem) => {
+    setIngredientList((prev) =>
+      prev.map((item) => (item.id === selectedItem.id ? selectedItem : item))
+    );
+  };
+
+  // const animalList = [
+  //   {
+  //     id: 1,
+  //     name: "dog",
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "cat",
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "sudal",
+  //   },
+  // ];
+
+  useEffect(() => {
+    // 실행 로직
+    console.log("🚀 ~ Info ~ ingredientList:", ingredientList);
+  }, [ingredientList]);
 
   // view
   return (
@@ -26,22 +88,25 @@ const Info = () => {
       <PrevButton />
       {/* END:뒤로가기 버튼 */}
       <div className="h-full flex flex-col">
-        {/* TODO:Title 컴포넌트 */}
-        <div className="px-2 pt-6">
-          <h1 className="text-4.5xl font-black text-white">
-            당신의 냉장고를 알려주세요
-          </h1>
-        </div>
-        {/* // TODO:Title 컴포넌트 */}
-
+        <Title mainTitle={"당신의 냉장고를 알려주세요"} />
         {/* START:form 영역 */}
         <div className="mt-20 overflow-auto">
           <form>
             {/* START:input 영역 */}
             <div>
               {ingredientList.map((item) => (
-                <InfoInput key={item.id} content={item} />
+                <InfoInput
+                  key={item.id}
+                  content={item}
+                  onChange={handleChange}
+                  onRemove={handleRemove}
+                />
               ))}
+              {/* <ul>
+                {animalList.map((animal, index) => (
+                  <li key={`animal${index}`}>{animal.name}</li>
+                ))}
+              </ul> */}
             </div>
             {/* END:input 영역 */}
           </form>
